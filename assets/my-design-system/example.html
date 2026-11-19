@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>我的品牌 · 设计系统</title>
+<link rel="stylesheet" href="design-system.css">
+<style>
+  body{margin:0;min-height:100vh;}
+  main{max-width:960px;margin:0 auto;padding:24px 16px 64px;display:flex;flex-direction:column;gap:12px;}
+  section{display:flex;flex-wrap:wrap;gap:12px;align-items:center;padding:16px 0 24px;border-bottom:1px solid var(--md-sys-color-outline-variant);}
+  section.col{flex-direction:column;align-items:stretch;max-width:420px;}
+</style>
+</head>
+<body class="m3">
+<header class="m3-topbar"><span class="m3-title-large title">我的品牌 设计系统</span><button class="m3-btn tonal" onclick="document.body.classList.toggle('dark')"><span class="m3-icon">dark_mode</span>深色 / 浅色</button></header>
+<main>
+<h1 class="m3-display-small">我的品牌</h1>
+<h2 class="m3-title-medium">按钮 · Button</h2>
+<section>
+<button class="m3-btn">Filled 主要</button>
+<button class="m3-btn tonal">Tonal 次要</button>
+<button class="m3-btn elevated">Elevated</button>
+<button class="m3-btn outlined">Outlined</button>
+<button class="m3-btn text">Text 文字</button>
+<button class="m3-btn" disabled>不可用</button>
+</section>
+<h2 class="m3-title-medium">带图标的按钮 · Button + icon</h2>
+<section>
+<button class="m3-btn"><span class="m3-icon">add</span>新建书单</button>
+<button class="m3-btn tonal"><span class="m3-icon">share</span>分享</button>
+<button class="m3-btn outlined"><span class="m3-icon">edit</span>编辑</button>
+</section>
+<h2 class="m3-title-medium">图标按钮 · Icon button</h2>
+<section>
+<button class="m3-icon-btn" aria-label="菜单"><span class="m3-icon">menu</span></button>
+<button class="m3-icon-btn on" aria-label="已收藏"><span class="m3-icon">favorite</span></button>
+<button class="m3-icon-btn filled" aria-label="添加"><span class="m3-icon">add</span></button>
+<button class="m3-icon-btn tonal" aria-label="书签"><span class="m3-icon">bookmark</span></button>
+<button class="m3-icon-btn outlined" aria-label="分享"><span class="m3-icon">share</span></button>
+</section>
+<h2 class="m3-title-medium">悬浮按钮 · FAB</h2>
+<section>
+<button class="m3-fab small" aria-label="添加"><span class="m3-icon">add</span></button>
+<button class="m3-fab" aria-label="写书评"><span class="m3-icon">edit</span></button>
+<button class="m3-fab extended"><span class="m3-icon">edit</span>写书评</button>
+</section>
+<h2 class="m3-title-medium">标签 · Chip</h2>
+<section>
+<button class="m3-chip"><span class="m3-icon">star</span>推荐</button>
+<button class="m3-chip on"><span class="m3-icon">check</span>小说</button>
+<button class="m3-chip">科幻</button>
+<span class="m3-chip">林小绿<span class="m3-icon end">close</span></span>
+</section>
+<h2 class="m3-title-medium">复选框 · 单选 · 开关 · Selection</h2>
+<section>
+<label class="m3-check"><input type="checkbox" checked>记住我</label>
+<label class="m3-check"><input type="radio" name="fmt" checked>纸质书</label>
+<label class="m3-check"><input type="radio" name="fmt">电子书</label>
+<label class="m3-switch"><input type="checkbox" checked><i></i>夜间模式</label>
+</section>
+<h2 class="m3-title-medium">滑块 · 进度 · Slider · Progress</h2>
+<section class="col">
+<input class="m3-slider" type="range" value="60" aria-label="字号">
+<div class="m3-progress" style="--value:40%"><i></i></div>
+<div class="m3-spinner" role="progressbar" aria-label="加载中"></div>
+</section>
+<h2 class="m3-title-medium">徽标 · Badge</h2>
+<section>
+<span class="m3-badged"><span class="m3-icon">notifications</span><span class="m3-badge dot"></span></span>
+<span class="m3-badged"><span class="m3-icon">mail</span><span class="m3-badge">3</span></span>
+<span class="m3-badged"><span class="m3-icon">shopping_cart</span><span class="m3-badge">99+</span></span>
+</section>
+<h2 class="m3-title-medium">输入框 · Text field</h2>
+<section class="col">
+<label class="m3-field outlined"><input placeholder=" "><span>邮箱</span><small>我们不会把邮箱给别人</small></label>
+<label class="m3-field outlined error"><input placeholder=" " value="lin@"><span>邮箱</span><small>邮箱格式不对</small></label>
+</section>
+<h2 class="m3-title-medium">搜索栏 · Search bar</h2>
+<section>
+<div class="m3-search"><span class="m3-icon">menu</span><input placeholder="搜书名、作者" aria-label="搜索"><span class="m3-icon">search</span></div>
+</section>
+<h2 class="m3-title-medium">分段按钮 · Segmented button</h2>
+<section>
+<div class="m3-seg"><button class="on"><span class="m3-icon">check</span>全部</button><button><span class="m3-icon">check</span>未读</button><button><span class="m3-icon">check</span>收藏</button></div>
+</section>
+<h2 class="m3-title-medium">标签页 · Tabs</h2>
+<section>
+<div class="m3-tabs"><button class="on">新书</button><button>排行</button><button>书单</button></div>
+</section>
+<h2 class="m3-title-medium">列表 · List</h2>
+<section>
+<ul class="m3-list">
+<li><span class="lead">林</span><div class="txt"><b>林小绿</b><span>这本书我读了三遍，每次都会哭。</span></div><span class="trail">3 分钟</span></li>
+<li><span class="lead">周</span><div class="txt"><b>周一一</b><span>推荐给所有长大了的小孩。</span></div><span class="trail">1 小时</span></li>
+</ul>
+</section>
+<h2 class="m3-title-medium">菜单 · Menu</h2>
+<section>
+<div class="m3-menu"><button><span class="m3-icon">edit</span>编辑</button><button><span class="m3-icon">share</span>分享</button><hr><button><span class="m3-icon">delete</span>删除</button></div>
+</section>
+<h2 class="m3-title-medium">消息条 · 提示 · Snackbar · Tooltip</h2>
+<section class="col">
+<div class="m3-snackbar"><span>已加入购物车</span><button class="m3-btn text">撤销</button></div>
+<span class="m3-tooltip">收藏这本书</span>
+</section>
+<h2 class="m3-title-medium">顶部应用栏 · Top app bar</h2>
+<section>
+<header class="m3-topbar"><button class="m3-icon-btn" aria-label="返回"><span class="m3-icon">arrow_back</span></button><h1 class="m3-title-large title">小王子</h1><button class="m3-icon-btn on" aria-label="收藏"><span class="m3-icon">favorite</span></button><button class="m3-icon-btn" aria-label="更多"><span class="m3-icon">more_vert</span></button></header>
+</section>
+<h2 class="m3-title-medium">底部导航栏 · Navigation bar</h2>
+<section>
+<nav class="m3-navbar"><a class="on"><span class="ind"><span class="m3-icon">home</span></span>首页</a><a><span class="ind"><span class="m3-icon">search</span></span>发现</a><a><span class="ind"><span class="m3-icon">shopping_cart</span><span class="m3-badge">2</span></span>购物车</a><a><span class="ind"><span class="m3-icon">person</span></span>我的</a></nav>
+</section>
+<h2 class="m3-title-medium">卡片 · Card</h2>
+<section>
+<div class="m3-card elevated"><div class="media"><span class="m3-icon">menu_book</span></div><div class="content"><h3 class="m3-title-medium">小王子</h3><p class="m3-body-medium sub">圣埃克苏佩里</p><div class="actions"><button class="m3-btn text">详情</button><button class="m3-btn">购买</button></div></div></div>
+<div class="m3-card filled"><div class="media secondary"><span class="m3-icon">star</span></div><div class="content"><h3 class="m3-title-medium">三体</h3><p class="m3-body-medium sub">刘慈欣</p><div class="actions"><button class="m3-btn tonal">加入书单</button></div></div></div>
+<div class="m3-card outlined"><div class="media tertiary"><span class="m3-icon">favorite</span></div><div class="content"><h3 class="m3-title-medium">活着</h3><p class="m3-body-medium sub">余华</p><div class="actions"><button class="m3-btn outlined">试读</button></div></div></div>
+</section>
+<h2 class="m3-title-medium">对话框 · Dialog</h2>
+<section>
+<div class="m3-dialog" role="dialog" aria-label="删除书单"><span class="m3-icon">delete</span><h3 class="m3-headline-small">删除这个书单？</h3><p>书单里的 12 本书和你的笔记会一起删掉，删了就找不回来了。</p><div class="actions"><button class="m3-btn text">取消</button><button class="m3-btn text">删除</button></div></div>
+</section>
+<h2 class="m3-title-medium">登录表单 · Sign-in form</h2>
+<section class="col">
+<form class="m3-card outlined m3-form"><h3 class="m3-headline-small">登录</h3><label class="m3-field outlined"><input placeholder=" "><span>手机号</span></label><label class="m3-field outlined"><input type="password" placeholder=" "><span>密码</span><small>至少 8 位</small></label><label class="m3-check"><input type="checkbox">记住我</label><button class="m3-btn block" type="button">登录</button><button class="m3-btn text block" type="button">忘记密码？</button></form>
+</section>
+</main>
+</body>
+</html>
