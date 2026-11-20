@@ -260,7 +260,7 @@ a{color:inherit;text-decoration:none}
 /* ---------- 猫猫币掉落动画 ---------- */
 .catcoin{
   position:fixed;z-index:60;left:0;top:0;
-  width:clamp(70px,6.2vw,104px);
+  width:clamp(36px,3.1vw,52px);
   pointer-events:none;
   filter:drop-shadow(0 10px 16px rgba(72,30,22,.30));
   will-change:transform,opacity;
@@ -402,40 +402,34 @@ a{color:inherit;text-decoration:none}
     var W = coin.offsetWidth;
     var startX = t.left + t.width * .60, hitX = l.left + l.width * .55;
     var hitY   = l.bottom - W * .25;
-    var landX  = s.right - W * .45, landY = s.top + s.height * .30;
-    var rollX  = s.left + s.width * .44, rollY = s.top + s.height * .36;
+    var landX  = s.left + s.width * .84, landY = s.top + s.height * .30;
+    var rollX  = s.left + s.width * .52, rollY = s.top + s.height * .34;
+    var apexX  = landX, apexY = hitY - W * 1.15;
 
     coin.hidden = false;
     coin.src = 'assets/pieces/coin-front.png';
     coin.style.transform = tf(startX, -W * 1.6, 0);
 
-    coin.animate([
+    /* 全程单条时间线：垂直坠落 → 砸灯 → 向左斜上半弧 → 垂直落到桌上 → 沿桌沿弧线滚到中间 → 从桌上坠出屏幕 */
+    var D = 3080;
+    var winH = window.innerHeight;
+    var arcX = landX + (rollX - landX) * .5, arcY = landY + (rollY - landY) * .5 + W * .8;
+    var seq = coin.animate([
       {transform: tf(startX, -W * 1.6, 0), easing:'cubic-bezier(.55,0,1,.6)'},
-      {transform: tf(hitX, hitY, 360), easing:'linear'}
-    ], {duration:640, fill:'forwards'}).onfinish = function(){
+      {transform: tf(hitX, hitY, 360),     offset:.208, easing:'cubic-bezier(.15,.55,.4,1)'},
+      {transform: tf(apexX, apexY, 720),   offset:.34, easing:'cubic-bezier(.5,.05,.65,.5)'},
+      {transform: tf(landX, landY, 1080),  offset:.485, easing:'linear'},
+      {transform: tf(arcX, arcY, 1440),    offset:.66, easing:'cubic-bezier(.4,0,.6,1)'},
+      {transform: tf(rollX, rollY, 1800),  offset:.818, easing:'cubic-bezier(.3,.6,.6,1)'},
+      {transform: tf(rollX, winH + W, 2000) + ' scale(.9)', offset:1}
+    ], {duration:D, fill:'forwards'});
 
-      swingLamp();
-      coin.src = 'assets/pieces/coin-side.png';
-      coin.animate([
-        {transform: tf(hitX, hitY, 360), easing:'cubic-bezier(.15,.55,.4,1)'},
-        {transform: tf(hitX - (hitX - landX) * .42, hitY - W * 1.1, 720), easing:'cubic-bezier(.55,0,1,.6)'},
-        {transform: tf(landX, landY, 1080)}
-      ], {duration:780, fill:'forwards'}).onfinish = function(){
+    /* 下一页就绪后在此处接入跳转：
+       seq.onfinish = function(){ window.location.href = 'gallery.html'; }; */
 
-        coin.animate([
-          {transform: tf(landX, landY, 1080), easing:'linear'},
-          {transform: tf(rollX, rollY, 1800)}
-        ], {duration:1100, fill:'forwards'}).onfinish = function(){
+    swingLamp();
 
-          coin.animate([
-            {transform: tf(rollX, rollY, 1800), opacity:1, easing:'cubic-bezier(.45,0,1,.6)'},
-            {transform: tf(rollX, rollY + W * 2.6, 1980) + ' scale(.72)', opacity:0}
-          ], {duration:560, fill:'forwards'}).onfinish = function(){
-            window.location.href = 'gallery.html';
-          };
-        };
-      };
-    };
+    return seq;
 
     function swingLamp(){
       try{
@@ -458,6 +452,15 @@ a{color:inherit;text-decoration:none}
     }
     playCoin();
   });
+
+  /* 调试：?autocoin 自动播放动画；&pause=N 定格在第 N 毫秒 */
+  if (location.search.indexOf('autocoin') > -1){
+    setTimeout(function(){
+      var seq = playCoin();
+      var m = location.search.match(/pause=(\d+)/);
+      if (seq && m){ seq.pause(); seq.currentTime = +m[1]; }
+    }, 600);
+  }
 })();
 </script>
 </body>
