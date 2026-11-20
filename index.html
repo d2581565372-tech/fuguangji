@@ -262,8 +262,12 @@ a{color:inherit;text-decoration:none}
   position:fixed;z-index:60;left:0;top:0;
   width:clamp(36px,3.1vw,52px);
   pointer-events:none;
-  filter:drop-shadow(0 10px 16px rgba(72,30,22,.30));
+  filter:url(#coinEdge) drop-shadow(0 10px 16px rgba(72,30,22,.30));
   will-change:transform,opacity;
+}
+#coinPathSvg{
+  position:absolute;inset:0;width:100%;height:100%;
+  pointer-events:none;z-index:59;
 }
 
 /* 超宽屏：文案列靠左，花台可以少裁一些 */
@@ -339,9 +343,24 @@ a{color:inherit;text-decoration:none}
   <img class="deco deco-chandelier" src="assets/pieces/chandelier-sticker.png" alt="" draggable="false">
   <img class="deco deco-planter" src="assets/pieces/planter-sticker.png" alt="" draggable="false">
   <img id="catCoin" class="catcoin" src="assets/pieces/coin-front.png" alt="" draggable="false" hidden>
+  <svg id="coinPathSvg" aria-hidden="true" focusable="false"></svg>
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+    <filter id="coinEdge" x="-30%" y="-30%" width="160%" height="160%">
+      <feMorphology in="SourceAlpha" operator="dilate" radius="4" result="edge"/>
+      <feFlood flood-color="#fbf4e6" result="color"/>
+      <feComposite in="color" in2="edge" operator="in" result="outline"/>
+      <feMerge>
+        <feMergeNode in="outline"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </svg>
 
 </div>
 
+<script src="assets/vendor/gsap.min.js"></script>
+<script src="assets/vendor/MotionPathPlugin.min.js"></script>
+<script src="assets/vendor/CustomEase.min.js"></script>
 <script>
 (function(){
   var btn = document.getElementById('enterBtn');
@@ -379,86 +398,124 @@ a{color:inherit;text-decoration:none}
     }
   }
 
-  /* ---------- 猫猫币掉落序列：坠向吊灯 → 灯摇摆 → 向左弹出 → 落上桌面右缘 → 沿桌边滚到中间 → 掉落进入画廊 ---------- */
+  /* ---------- 猫猫币 GSAP 路径动画：吊灯上方入场 → 砸灯底 → 向左半弧 → 垂直落桌右缘 → 沿桌沿弧线滑到中间边缘 → 掉下桌子（单次播放） ---------- */
   var coin = document.getElementById('catCoin');
   var lamp = document.querySelector('.deco-chandelier');
   var tableImg = document.querySelector('.s-table');
   var intro = document.querySelector('.intro');
 
   function rect(el){ return el ? el.getBoundingClientRect() : null; }
-  function tf(x, y, rot){
-    return 'translate(' + (x - coin.offsetWidth / 2) + 'px,' + (y - coin.offsetHeight / 2) + 'px) rotate(' + rot + 'deg)';
+
+  var pathSvg = document.getElementById('coinPathSvg');
+  var title = document.querySelector('.intro h1');
+  var chips = document.querySelector('.s-chips');
+  var coinTl = null, spinTweens = [];
+  var pathFracs = {lamp:.2, apex:.32, land:.56};
+
+  function buildPath(){
+    var l = rect(lamp), s = rect(tableImg), c = rect(chips);
+    if (!l || !s || !c){ return false; }
+    var W = coin.offsetWidth || 45;
+
+    var p0x = l.left + l.width * .55,  p0y = -70;                    /* 吊灯上方入场 */
+    var p1x = p0x,                     p1y = l.bottom - W * .3;      /* 砸到灯底 */
+    var p2x = s.left + s.width * .84,  p2y = p1y - W * 3.2;          /* 半弧顶：明显跃起，弧顶在落点正上方 */
+    var p3x = p2x,                     p3y = s.top + s.height * .30; /* 垂直落到桌面右缘 */
+    var p4x = p3x + (s.left + s.width * .68 - p3x) * .5,             /* 沿桌沿弧线：贴边下沉 */
+          p4y = p3y + (s.top + s.height * .34 - p3y) * .5 + W * .9;
+    var p5x = s.left + s.width * .52,  p5y = s.top + s.height * .34; /* 桌子中间边缘 */
+    var p6y = window.innerHeight + W * 2;                            /* 掉下桌子 */
+
+    var d = 'M' + p0x + ',' + p0y +
+            ' C' + p0x + ',' + (p0y + (p1y - p0y) * .55) + ' ' + p1x + ',' + (p1y - 90) + ' ' + p1x + ',' + p1y +
+            ' C' + (p1x - W * 3.2) + ',' + (p1y - 30) + ' ' + (p2x + 70) + ',' + (p2y - 20) + ' ' + p2x + ',' + p2y +
+            ' C' + p2x + ',' + (p2y + (p3y - p2y) * .45) + ' ' + p3x + ',' + (p3y - (p3y - p2y) * .45) + ' ' + p3x + ',' + p3y +
+            ' C' + (p3x - 70) + ',' + (p3y + 45) + ' ' + (p4x + 90) + ',' + (p4y - 25) + ' ' + p4x + ',' + p4y +
+            ' C' + (p4x - 85) + ',' + (p4y + 28) + ' ' + (p5x + 65) + ',' + (p5y - 12) + ' ' + p5x + ',' + p5y +
+            ' C' + p5x + ',' + (p5y + 140) + ' ' + p5x + ',' + (p6y - 140) + ' ' + p5x + ',' + p6y;
+
+    pathSvg.setAttribute('width', document.documentElement.clientWidth);
+    pathSvg.setAttribute('height', document.documentElement.clientHeight);
+    pathSvg.innerHTML = '<path id="coinPath" d="' + d + '" fill="none" stroke="none"/>';
+
+    /* 采样定位半弧顶与落桌点在路径长度上的比例，供分段慢放 */
+    var pathEl = document.getElementById('coinPath');
+    var L = pathEl.getTotalLength();
+    function fracAt(x, y){
+      var best = 0, bd = 1e18;
+      for (var i = 0; i <= 240; i++){
+        var pt = pathEl.getPointAtLength(L * i / 240);
+        var dx = pt.x - x, dy = pt.y - y, dd = dx * dx + dy * dy;
+        if (dd < bd){ bd = dd; best = i / 240; }
+      }
+      return best;
+    }
+    pathFracs.lamp = fracAt(p1x, p1y);
+    pathFracs.apex = fracAt(p2x, p2y);
+    pathFracs.land = fracAt(p3x, p3y);
+    return true;
   }
 
-  function playCoin(){
-    if (coin.dataset.playing){ return; }
-    coin.dataset.playing = '1';
-    btn.disabled = true;
-    hint.classList.add('show');
-
-    var t = rect(intro), l = rect(lamp), s = rect(tableImg);
-    if (!t || !l || !s || !coin.animate){ window.location.href = 'gallery.html'; return; }
-
-    var W = coin.offsetWidth;
-    var startX = t.left + t.width * .60, hitX = l.left + l.width * .55;
-    var hitY   = l.bottom - W * .25;
-    var landX  = s.left + s.width * .84, landY = s.top + s.height * .30;
-    var rollX  = s.left + s.width * .52, rollY = s.top + s.height * .34;
-    var apexX  = landX, apexY = hitY - W * 1.15;
+  function startCoinLoop(){
+    if (!window.gsap || !window.MotionPathPlugin){ hint.classList.add('show'); return; }
+    gsap.registerPlugin(MotionPathPlugin);
+    if (window.CustomEase){ gsap.registerPlugin(CustomEase); }
+    if (coinTl){ coinTl.kill(); coinTl = null; }
+    if (!buildPath()){ return; }
 
     coin.hidden = false;
     coin.src = 'assets/pieces/coin-front.png';
-    coin.style.transform = tf(startX, -W * 1.6, 0);
+    hint.classList.add('show');
 
-    /* 全程单条时间线：垂直坠落 → 砸灯 → 向左斜上半弧 → 垂直落到桌上 → 沿桌沿弧线滚到中间 → 从桌上坠出屏幕 */
-    var D = 3080;
-    var winH = window.innerHeight;
-    var arcX = landX + (rollX - landX) * .5, arcY = landY + (rollY - landY) * .5 + W * .8;
-    var seq = coin.animate([
-      {transform: tf(startX, -W * 1.6, 0), easing:'cubic-bezier(.55,0,1,.6)'},
-      {transform: tf(hitX, hitY, 360),     offset:.208, easing:'cubic-bezier(.15,.55,.4,1)'},
-      {transform: tf(apexX, apexY, 720),   offset:.34, easing:'cubic-bezier(.5,.05,.65,.5)'},
-      {transform: tf(landX, landY, 1080),  offset:.485, easing:'linear'},
-      {transform: tf(arcX, arcY, 1440),    offset:.66, easing:'cubic-bezier(.4,0,.6,1)'},
-      {transform: tf(rollX, rollY, 1800),  offset:.818, easing:'cubic-bezier(.3,.6,.6,1)'},
-      {transform: tf(rollX, winH + W, 2000) + ' scale(.9)', offset:1}
-    ], {duration:D, fill:'forwards'});
+    /* 释放灯的 CSS 入场动画，改由 GSAP 接管摆动（保持横向 1.2 倍） */
+    lamp.style.animation = 'none';
+    lamp.style.transform = 'scaleX(1.2)';
 
-    /* 下一页就绪后在此处接入跳转：
-       seq.onfinish = function(){ window.location.href = 'gallery.html'; }; */
-
-    swingLamp();
-
-    return seq;
-
-    function swingLamp(){
-      try{
-        lamp.animate([
-          {rotate:'0deg'},
-          {rotate:'9deg', offset:.22},
-          {rotate:'-8deg', offset:.45},
-          {rotate:'5deg', offset:.66},
-          {rotate:'-3deg', offset:.85},
-          {rotate:'0deg'}
-        ], {duration:1600, easing:'ease-in-out'});
-      }catch(e){}
+    /* 单次播放：坠落→弧顶→落桌合并为一段速度连续的运动（弧顶减速但不停车，随后持续加速落桌） */
+    /* 按实测路径比例分三段：快速坠落(→灯) → 减速跃弧(→弧顶) → 陡加速坠落到桌右缘；跃弧段加快 */
+    var lF = pathFracs.lamp, aLen = pathFracs.apex, lT = .11, aT = .50;
+    if (window.CustomEase){
+      CustomEase.create('coinFall',
+        'M0,0 C' + (lT * .4).toFixed(3) + ',' + (lF * .7).toFixed(3) + ' ' + (lT * .85).toFixed(3) + ',' + (lF * .94).toFixed(3) + ' ' + lT.toFixed(3) + ',' + lF.toFixed(3) +
+        ' C' + (lT + (aT - lT) * .35).toFixed(3) + ',' + (lF + (aLen - lF) * .35).toFixed(3) + ' ' + (aT - .09).toFixed(3) + ',' + (aLen - .08).toFixed(3) + ' ' + aT.toFixed(3) + ',' + aLen.toFixed(3) +
+        ' C' + (aT + .10).toFixed(3) + ',' + (aLen + .09).toFixed(3) + ' 0.92,0.86 1,1');
     }
+    var fallEase = window.CustomEase ? 'coinFall' : 'power2.inOut';
+
+    coinTl = gsap.timeline()
+      .fromTo(coin, {opacity:0}, {opacity:1, duration:.3}, 0)
+      .to(coin, {motionPath:{path:'#coinPath', align:'#coinPath', alignOrigin:[.5,.5], start:0,             end:pathFracs.land, autoRotate:false}, duration:1.8, ease:fallEase}, 0)
+      .to(coin, {motionPath:{path:'#coinPath', align:'#coinPath', alignOrigin:[.5,.5], start:pathFracs.land, end:1,             autoRotate:false}, duration:1.2, ease:'power1.inOut'}, 1.8)
+      .to(coin, {y:'+=' + (window.innerHeight * .6), duration:1.0, ease:'power2.in'}, 3.0)
+      .to(coin, {opacity:0, duration:.3}, 3.85);
+
+    /* 砸灯摆动：与最初版本同参数，9 → -8 → 5 → -3 → 0，1.6 秒衰减 */
+    gsap.to(lamp, {
+      keyframes:[
+        {rotation:9,  duration:.352},
+        {rotation:-8, duration:.368},
+        {rotation:5,  duration:.336},
+        {rotation:-3, duration:.304},
+        {rotation:0,  duration:.24}
+      ],
+      ease:'power1.inOut', delay:.2
+    });
+
+    /* 全程平面自转：Z 轴 2.8 秒一圈，独立于路径持续进行 */
+    spinTweens.forEach(function(t){ t.kill(); });
+    spinTweens = [
+      gsap.to(coin, {rotationZ:360, duration:2.8, ease:'none', repeat:-1})
+    ];
   }
 
-  btn.addEventListener('click', function(){
-    if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches){
-      window.location.href = 'gallery.html';
-      return;
-    }
-    playCoin();
-  });
+  btn.addEventListener('click', startCoinLoop);
 
-  /* 调试：?autocoin 自动播放动画；&pause=N 定格在第 N 毫秒 */
+  /* 调试：?autocoin 自动播放；&pause=N 定格在第 N 秒 */
   if (location.search.indexOf('autocoin') > -1){
     setTimeout(function(){
-      var seq = playCoin();
-      var m = location.search.match(/pause=(\d+)/);
-      if (seq && m){ seq.pause(); seq.currentTime = +m[1]; }
+      startCoinLoop();
+      var m = location.search.match(/pause=([\d.]+)/);
+      if (coinTl && m){ coinTl.pause(+m[1]); }
     }, 600);
   }
 })();
