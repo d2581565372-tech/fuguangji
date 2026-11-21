@@ -456,6 +456,87 @@ a{color:inherit;text-decoration:none}
     return true;
   }
 
+  /* ---------- 音效：Web Audio 实时合成（无音频文件），随动画各阶段触发 ---------- */
+  var audioCtx = null;
+  function sfxCtx(){
+    try{
+      var AC = window.AudioContext || window.webkitAudioContext;
+      if (!AC){ return null; }
+      if (!audioCtx){ audioCtx = new AC(); }
+      if (audioCtx.state === 'suspended'){ audioCtx.resume(); }
+      return audioCtx.state === 'running' ? audioCtx : audioCtx;
+    }catch(e){ return null; }
+  }
+  function noiseBuf(ctx, sec){
+    var len = Math.max(1, Math.floor(ctx.sampleRate * sec));
+    var b = ctx.createBuffer(1, len, ctx.sampleRate), d = b.getChannelData(0);
+    for (var i = 0; i < len; i++){ d[i] = Math.random() * 2 - 1; }
+    return b;
+  }
+  function whoosh(ctx, t0, dur, f1, f2, vol){
+    var src = ctx.createBufferSource(); src.buffer = noiseBuf(ctx, dur + .05);
+    var bp = ctx.createBiquadFilter(); bp.type = 'bandpass'; bp.Q.value = 1.1;
+    bp.frequency.setValueAtTime(f1, t0);
+    bp.frequency.exponentialRampToValueAtTime(f2, t0 + dur);
+    var g = ctx.createGain();
+    g.gain.setValueAtTime(.0001, t0);
+    g.gain.exponentialRampToValueAtTime(vol, t0 + dur * .3);
+    g.gain.exponentialRampToValueAtTime(.0001, t0 + dur);
+    src.connect(bp); bp.connect(g); g.connect(ctx.destination);
+    src.start(t0); src.stop(t0 + dur + .05);
+  }
+  function clang(ctx, t0, base, vol){
+    [1, 1.62, 2.47, 3.01].forEach(function(m, i){
+      var o = ctx.createOscillator(); o.type = 'sine';
+      o.frequency.value = base * m * (1 + Math.random() * .012);
+      var g = ctx.createGain();
+      g.gain.setValueAtTime(vol / (i + 1.5), t0);
+      g.gain.exponentialRampToValueAtTime(.0001, t0 + .55 - i * .08);
+      o.connect(g); g.connect(ctx.destination);
+      o.start(t0); o.stop(t0 + .6);
+    });
+    var src = ctx.createBufferSource(); src.buffer = noiseBuf(ctx, .08);
+    var lp = ctx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 900;
+    var g2 = ctx.createGain();
+    g2.gain.setValueAtTime(vol * 1.2, t0);
+    g2.gain.exponentialRampToValueAtTime(.0001, t0 + .09);
+    src.connect(lp); lp.connect(g2); g2.connect(ctx.destination);
+    src.start(t0);
+  }
+  function clink(ctx, t0, vol){
+    [[2100, 0], [2750, .05], [3300, .11]].forEach(function(p){
+      var o = ctx.createOscillator(); o.type = 'triangle'; o.frequency.value = p[0];
+      var g = ctx.createGain();
+      g.gain.setValueAtTime(.0001, t0 + p[1]);
+      g.gain.exponentialRampToValueAtTime(vol, t0 + p[1] + .012);
+      g.gain.exponentialRampToValueAtTime(.0001, t0 + p[1] + .18);
+      o.connect(g); g.connect(ctx.destination);
+      o.start(t0 + p[1]); o.stop(t0 + p[1] + .2);
+    });
+  }
+  function slideNoise(ctx, t0, dur, vol){
+    var src = ctx.createBufferSource(); src.buffer = noiseBuf(ctx, dur);
+    var bp = ctx.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = 2600; bp.Q.value = .8;
+    var g = ctx.createGain();
+    g.gain.setValueAtTime(.0001, t0);
+    g.gain.linearRampToValueAtTime(vol, t0 + dur * .2);
+    g.gain.linearRampToValueAtTime(.0001, t0 + dur);
+    src.connect(bp); bp.connect(g); g.connect(ctx.destination);
+    src.start(t0);
+  }
+  function playCoinSfx(){
+    var ctx = sfxCtx(); if (!ctx){ return; }
+    var t = ctx.currentTime + .02;
+    whoosh(ctx, t,       .22, 1800, 500,  .10);  /* 坠落 */
+    clang(ctx,  t + .20, 620,  .15);             /* 砸灯金属撞击 */
+    whoosh(ctx, t + .25, .60, 500, 1500, .05);   /* 跃起半弧 */
+    whoosh(ctx, t + .90, .85, 900, 280,  .07);   /* 加速下落 */
+    clink(ctx,  t + 1.80, .12);                  /* 落桌筹码声 */
+    clang(ctx,  t + 1.80, 880, .05);             /* 落桌轻金属 */
+    slideNoise(ctx, t + 1.85, 1.15, .04);        /* 沿桌沿滑行 */
+    whoosh(ctx, t + 3.00, .95, 600, 200, .07);   /* 掉下桌子 */
+  }
+
   function startCoinLoop(){
     if (!window.gsap || !window.MotionPathPlugin){ hint.classList.add('show'); return; }
     gsap.registerPlugin(MotionPathPlugin);
@@ -506,6 +587,8 @@ a{color:inherit;text-decoration:none}
     spinTweens = [
       gsap.to(coin, {rotationZ:360, duration:2.8, ease:'none', repeat:-1})
     ];
+
+    playCoinSfx();
   }
 
   btn.addEventListener('click', startCoinLoop);
