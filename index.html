@@ -395,7 +395,7 @@ body:not(.go) .deco-planter{animation:none}
     <section class="intro" id="projects">
       <h1>我的作品<br>收藏馆</h1>
       <p class="sub">每一枚筹码，记录一个设计项目</p>
-      <button class="btn" id="enterBtn" type="button">进入筹码画廊</button>
+      <button class="btn" id="enterBtn" type="button">进入作品收藏馆</button>
       <p class="hint" id="hint" aria-live="polite">画廊正在筹备中 · 敬请期待</p>
     </section>
   </main>
@@ -470,6 +470,7 @@ body:not(.go) .deco-planter{animation:none}
   var title = document.querySelector('.intro h1');
   var chips = document.querySelector('.s-chips');
   var coinTl = null, spinTweens = [];
+  var coinDropX = .52;                                 /* 硬币最后掉下桌子的 X（视口宽比例），传给目录页 */
   var pathFracs = {lamp:.2, apex:.32, land:.56};
 
   function buildPath(){
@@ -497,6 +498,7 @@ body:not(.go) .deco-planter{animation:none}
     pathSvg.setAttribute('width', document.documentElement.clientWidth);
     pathSvg.setAttribute('height', document.documentElement.clientHeight);
     pathSvg.innerHTML = '<path id="coinPath" d="' + d + '" fill="none" stroke="none"/>';
+    coinDropX = p5x / document.documentElement.clientWidth;
 
     /* 采样定位半弧顶与落桌点在路径长度上的比例，供分段慢放 */
     var pathEl = document.getElementById('coinPath');
@@ -788,6 +790,14 @@ body:not(.go) .deco-planter{animation:none}
     ];
 
     playCoinSfx();
+
+    /* 硬币动画播完：接到第二个网页（目录页），带上掉落 X，让硬币在那里从相同位置继续掉落 */
+    coinTl.eventCallback('onComplete', function(){
+      if (location.search.indexOf('nonav') > -1) return;
+      setTimeout(function(){
+        window.location.href = 'catalog.html?drop=1&x=' + coinDropX.toFixed(3);
+      }, 280);
+    });
   }
 
   btn.addEventListener('click', startCoinLoop);

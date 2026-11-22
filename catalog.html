@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="color-scheme" content="light">
+<title>作品集 · 视觉与装置</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400&family=Noto+Serif+SC:wght@300;400;500;600&family=Noto+Sans+SC:wght@300;400&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   作品集 · 视觉与装置（单屏定格）
+   画面中心：图片拼贴打底 + 波浪金胶片 A/B 前后重叠
+   左右贴边大筹码置顶；页面锁定不可滚动
+   ============================================================ */
+:root{
+  --bg:#f7ebdf;
+  --wine:#6b1a22;
+  --ink:#2e2521;
+  --ink-soft:#6b5d52;
+  --olive:#4f5c46;
+  --gold:#c3a06a;
+  --gold-deep:#8d6733;
+  --card:#fbf3e4;
+  --line:rgba(195,160,106,.34);
+  --serif:"Noto Serif SC","Songti SC","STSong","SimSun",serif;
+  --sans:"Noto Sans SC","PingFang SC","Microsoft YaHei",sans-serif;
+  --ease:cubic-bezier(.22,.8,.28,1);
+  --pad-x:clamp(20px,4.4vw,68px);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{overflow:hidden}            /* 网页锁定：上下不可滚动 */
+body{
+  height:100svh;
+  position:relative;
+  background:
+    radial-gradient(1200px 600px at 82% -10%, rgba(195,160,106,.16), transparent 60%),
+    radial-gradient(900px 500px at -10% 110%, rgba(94,18,25,.07), transparent 60%),
+    var(--bg);
+  color:var(--ink);
+  font-family:var(--serif);
+  -webkit-font-smoothing:antialiased;
+}
+a{color:inherit;text-decoration:none}
+img{display:block}
+::selection{background:rgba(107,26,34,.14)}
+
+/* ---------- 导航（与首页同款：左上胶囊 + 右上返回） ---------- */
+.nav{
+  position:absolute;top:clamp(14px,2.2vh,24px);left:var(--pad-x);
+  z-index:6;
+  display:flex;align-items:center;justify-content:flex-start;
+  gap:clamp(20px,2.6vw,38px);
+  padding:11px clamp(16px,1.6vw,24px);
+  border-radius:999px;
+  background:rgba(250,243,234,.88);
+  border:1px solid var(--line);
+  box-shadow:0 14px 30px -20px rgba(74,32,22,.55);
+  backdrop-filter:blur(8px) saturate(1.04);
+  animation:fadeDown 1s .1s var(--ease) both;
+}
+.nav.nav-back{
+  left:auto;right:var(--pad-x);
+  animation-delay:.22s;
+}
+.nav a{
+  font-weight:500;font-size:.92rem;letter-spacing:.22em;
+  color:var(--wine);transition:opacity .4s;
+}
+.nav a:hover{opacity:.7}
+
+/* ---------- 标题 ---------- */
+.head{
+  position:absolute;top:calc(clamp(66px,10.5vh,104px) - 20px);left:0;right:0;
+  z-index:5;text-align:center;padding:0 var(--pad-x);
+  pointer-events:none;
+}
+.head .eyebrow{
+  font-family:var(--sans);font-weight:300;
+  font-size:.72rem;letter-spacing:.5em;text-indent:.5em;
+  color:var(--gold-deep);text-transform:uppercase;
+  animation:riseIn 1s .2s var(--ease) both;
+}
+.head h1{
+  margin-top:12px;
+  font-size:clamp(1.7rem,3.4vw,2.6rem);font-weight:600;
+  letter-spacing:.14em;line-height:1.3;color:var(--wine);
+  animation:riseIn 1s .32s var(--ease) both;
+}
+.head h1::after{
+  content:"";display:block;width:114px;height:3px;margin:16px auto 0;
+  background:linear-gradient(90deg,var(--gold),rgba(195,160,106,0));
+}
+.head .sub{
+  margin-top:10px;
+  font-family:var(--sans);font-weight:300;
+  font-size:clamp(.84rem,1.2vw,.98rem);
+  letter-spacing:.14em;line-height:1.8;color:var(--ink-soft);
+  animation:riseIn 1s .44s var(--ease) both;
+}
+
+/* ---------- 波浪金胶卷 A / B（原始 PNG 通栏）：带外缘分块蒙版（留出胶卷自带边），滚轮走格 ---------- */
+.film{
+  position:absolute;left:50%;top:calc(50% + 20px);z-index:2;pointer-events:none;user-select:none;
+  width:106vw;
+  filter:drop-shadow(0 18px 26px rgba(72,30,22,.28));
+  animation:decoIn 1.5s .45s var(--ease) both;
+}
+.film-a{transform:translate(-52%,-58%) rotate(-1.5deg)}
+.film-b{transform:translate(-48%,-40%) rotate(2deg);z-index:3;animation-delay:.6s}
+.film-base{display:block;width:100%;height:auto}
+.cell{
+  position:absolute;overflow:hidden;
+  pointer-events:auto;cursor:pointer;
+  transition:transform .45s var(--ease);
+}
+.cell:hover{transform:scale(1.035)}
+.cell .strip{
+  position:absolute;top:0;left:0;width:100%;height:100%;
+  display:flex;transition:transform .38s var(--ease);will-change:transform;
+}
+.cell .strip img{
+  flex:0 0 100%;width:100%;height:100%;object-fit:cover;display:block;
+  filter:brightness(.82);
+  transition:filter .3s var(--ease);
+}
+.cell:hover .strip img{filter:brightness(1.02)}
+/* 悬停：只亮边缘（暖金内发光圈），整图不加亮 */
+.cell::after{
+  content:'';position:absolute;inset:0;pointer-events:none;
+  box-shadow:inset 0 0 0 3px rgba(255,240,212,.95), inset 0 0 20px rgba(255,240,212,.4);
+  opacity:0;transition:opacity .3s var(--ease);
+}
+.cell:hover::after{opacity:1}
+
+/* 后排筹码（左半二分之一处，垫底） */
+.deco{
+  position:absolute;z-index:0;pointer-events:none;user-select:none;
+  filter:drop-shadow(0 14px 22px rgba(72,30,22,.16));
+  animation:decoIn 1.5s .15s var(--ease) both;
+}
+.deco-chips-back{top:calc(56% - 50px);left:14%;width:clamp(180px,19vw,290px);transform:rotate(2.5deg)}
+@keyframes decoIn{from{opacity:0}to{opacity:1}}
+
+/* ---------- 贴边置顶的左右筹码（放大两倍） ---------- */
+.stk{
+  position:fixed;z-index:50;pointer-events:none;user-select:none;
+  filter:drop-shadow(0 16px 26px rgba(72,30,22,.24));
+}
+.stk-l{left:-5vw;top:calc(62% + 70px);width:clamp(300px,31vw,500px);animation:stkL 1.1s .75s var(--ease) both}
+.stk-r{right:-40px;top:calc(61% + 70px);width:clamp(300px,31vw,500px);animation:stkR 1.1s .95s var(--ease) both}
+@keyframes stkL{from{opacity:0;transform:translate(-34px,-50%)}to{opacity:1;transform:translate(0,-50%)}}
+@keyframes stkR{from{opacity:0;transform:translate(34px,-50%)}to{opacity:1;transform:translate(0,-50%)}}
+
+/* ---------- 动效 ---------- */
+@keyframes fadeDown{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:translateY(0)}}
+@keyframes riseIn{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
+
+/* ---------- 响应式 ---------- */
+@media (max-width:880px){
+  .stk{display:none}
+  .deco-chips-back{display:none}
+  .head{top:calc(clamp(60px,9vh,84px) - 20px)}
+}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms!important;animation-delay:0s!important;transition-duration:.2s!important}
+}
+</style>
+</head>
+<body>
+
+<!-- 底层：后排筹码 -->
+<img class="deco deco-chips-back" src="assets/stickers/chips-back.png" alt="" draggable="false">
+
+<!-- 波浪金胶卷 A（后） / B（前）：原始波浪形态，作品图嵌进帧格，滚轮走格 -->
+<div class="film film-a" id="filmA" aria-hidden="true">
+  <img class="film-base" src="assets/stickers/film-a.png" alt="" draggable="false">
+</div>
+<div class="film film-b" id="filmB" aria-hidden="true">
+  <img class="film-base" src="assets/stickers/film-b.png" alt="" draggable="false">
+</div>
+
+<header class="nav">
+  <a href="index.html">作品收藏馆</a>
+  <a href="index.html#projects">项目</a>
+  <a href="index.html#about">关于</a>
+  <a href="index.html#contact">联系</a>
+  <a href="gallery.html">筹码画廊</a>
+</header>
+<header class="nav nav-back">
+  <a href="index.html">返回首页</a>
+</header>
+
+<section class="head">
+  <p class="eyebrow">Portfolio Catalog</p>
+  <h1>作品集 · 视觉与装置</h1>
+  <p class="sub">十个系列，从基础视觉探索到空间光影装置</p>
+</section>
+
+
+
+<!-- 贴边置顶：左筹码 / 右筹码（放大两倍） -->
+<img class="stk stk-l" src="assets/stickers/chips-left.png" alt="" draggable="false">
+<img class="stk stk-r" src="assets/stickers/chips-right.png" alt="" draggable="false">
+
+<script>
+/* 波浪金胶卷：原始 PNG 波浪形态（形态与原图一致），
+   作品图按检测出的帧格四边形 clip-path 嵌进格子里；
+   滚轮/中键滚动驱动：每滚一格，画面走一格（无缝循环），不滚不动 */
+(function(){
+  var SEQ_NAMES = ['w01a','w02a','w03a','w04a','w05a','w06a','w07a','w08a','w09a','w10a'];
+  /* 带整体外缘（内缩 8px 留出胶卷自带描边）：蒙版沿胶卷垂直等分 SEGS 块，无缝衔接 */
+  var GEO = {
+    A: {w:1108, h:383, dir:-1,
+      top:[[14,82],[30,72],[46,62],[62,53],[78,46],[94,41],[110,36],[126,31],[142,28],[158,25],[174,23],[190,22],[206,22],[222,22],[238,23],[254,24],[270,26],[286,28],[302,30],[318,32],[334,35],[350,39],[366,43],[382,48],[398,53],[414,59],[430,64],[446,71],[462,78],[478,85],[494,91],[510,99],[526,106],[542,113],[558,121],[574,128],[590,135],[606,143],[622,150],[638,157],[654,163],[670,170],[686,176],[702,182],[718,188],[734,193],[750,198],[766,202],[782,206],[798,209],[814,213],[830,215],[846,218],[862,220],[878,222],[894,223],[910,224],[926,225],[942,226],[958,226],[974,226],[990,225],[1006,225],[1022,223],[1038,221],[1054,220],[1070,218],[1086,216]],
+      bot:[[14,195],[30,188],[46,183],[62,178],[78,174],[94,172],[110,170],[126,169],[142,169],[158,169],[174,171],[190,172],[206,174],[222,178],[238,181],[254,186],[270,191],[286,197],[302,203],[318,209],[334,215],[350,222],[366,229],[382,236],[398,243],[414,250],[430,257],[446,264],[462,271],[478,278],[494,285],[510,292],[526,298],[542,305],[558,311],[574,317],[590,323],[606,327],[622,332],[638,336],[654,340],[670,343],[686,346],[702,349],[718,352],[734,353],[750,355],[766,357],[782,357],[798,359],[814,359],[830,359],[846,359],[862,359],[878,359],[894,359],[910,359],[926,358],[942,357],[958,357],[974,357],[990,356],[1006,354],[1022,353],[1038,352],[1054,351],[1070,350],[1086,348]]},
+    B: {w:1108, h:383, dir:1,
+      top:[[14,215],[30,217],[46,220],[62,221],[78,222],[94,224],[110,225],[126,226],[142,226],[158,226],[174,225],[190,225],[206,224],[222,222],[238,220],[254,219],[270,217],[286,214],[302,211],[318,208],[334,204],[350,200],[366,195],[382,190],[398,185],[414,178],[430,173],[446,166],[462,160],[478,153],[494,146],[510,139],[526,131],[542,124],[558,117],[574,110],[590,102],[606,94],[622,88],[638,81],[654,74],[670,67],[686,61],[702,55],[718,51],[734,45],[750,41],[766,37],[782,33],[798,31],[814,28],[830,26],[846,25],[862,24],[878,23],[894,22],[910,22],[926,23],[942,24],[958,27],[974,29],[990,34],[1006,39],[1022,44],[1038,50],[1054,58],[1070,67],[1086,78]],
+      bot:[[14,347],[30,349],[46,350],[62,352],[78,353],[94,354],[110,355],[126,356],[142,357],[158,357],[174,358],[190,358],[206,359],[222,359],[238,359],[254,360],[270,359],[286,359],[302,359],[318,358],[334,357],[350,356],[366,354],[382,352],[398,350],[414,348],[430,345],[446,341],[462,338],[478,334],[494,330],[510,324],[526,319],[542,313],[558,308],[574,301],[590,295],[606,288],[622,281],[638,274],[654,267],[670,260],[686,253],[702,246],[718,239],[734,232],[750,225],[766,218],[782,211],[798,205],[814,199],[830,193],[846,188],[862,183],[878,179],[894,176],[910,173],[926,171],[942,170],[958,169],[974,169],[990,170],[1006,171],[1022,174],[1038,176],[1054,180],[1070,185],[1086,192]]}
+  };
+  window.__FILM_GEO = GEO;                         /* 供硬币落点计算使用（后面那条胶卷的上缘描边） */
+  var SEGS = 5;
+  function yAt(arr, x){
+    if (x <= arr[0][0]) return arr[0][1];
+    for (var i = 0; i < arr.length - 1; i++)
+      if (x <= arr[i + 1][0]){
+        var t = (x - arr[i][0]) / (arr[i + 1][0] - arr[i][0]);
+        return arr[i][1] + (arr[i + 1][1] - arr[i][1]) * t;
+      }
+    return arr[arr.length - 1][1];
+  }
+  var strips = [];
+  Object.keys(GEO).forEach(function(k){
+    var g = GEO[k], host = document.getElementById('film' + k);
+    if (!host) return;
+    var seq = SEQ_NAMES.length;
+    var names = g.dir === 1 ? SEQ_NAMES.slice().reverse() : SEQ_NAMES;
+    var bx0 = g.top[0][0], bx1 = g.top[g.top.length - 1][0];
+    for (var s = 0; s < SEGS; s++){
+      /* 块间留 15px 缝隙露出金色胶卷底（首尾块贴边不留缝） */
+      var gap = 15;
+      var a = bx0 + (bx1 - bx0) * s / SEGS + (s === 0 ? 0 : gap / 2);
+      var b = bx0 + (bx1 - bx0) * (s + 1) / SEGS - (s === SEGS - 1 ? 0 : gap / 2);
+      /* 上下内缩 15% 后的带缘曲线 */
+      var minY0 = 1e9, maxY0 = -1e9;
+      for (var xx = a; xx <= b; xx += 8){
+        var t0 = yAt(g.top, xx), u0 = yAt(g.bot, xx);
+        if (t0 < minY0) minY0 = t0;
+        if (u0 > maxY0) maxY0 = u0;
+      }
+      var padY = (maxY0 - minY0) * .15;
+      var tY = function(x){ return yAt(g.top, x) + padY; };
+      var bY = function(x){ return yAt(g.bot, x) - padY; };
+      /* 二次贝塞尔采样（画圆角） */
+      var quad = function(p0, p1, p2, n){
+        var out = [];
+        for (var i = 1; i <= n; i++){
+          var t = i / n, mt = 1 - t;
+          out.push([mt * mt * p0[0] + 2 * mt * t * p1[0] + t * t * p2[0],
+                    mt * mt * p0[1] + 2 * mt * t * p1[1] + t * t * p2[1]]);
+        }
+        return out;
+      };
+      /* 圆角半径：固定 10px */
+      var r = 10;
+      var pts = [], st = (b - a) / 8, xx;
+      for (xx = a + r; xx < b - r - st * .4; xx += st) pts.push([xx, tY(xx)]);
+      pts.push([b - r, tY(b - r)]);
+      pts = pts.concat(quad([b - r, tY(b - r)], [b, tY(b - r)], [b, tY(b - r) + r], 5));
+      pts.push([b, bY(b - r) - r]);
+      pts = pts.concat(quad([b, bY(b - r) - r], [b, bY(b - r)], [b - r, bY(b - r)], 5));
+      for (xx = b - r - st; xx > a + r + st * .4; xx -= st) pts.push([xx, bY(xx)]);
+      pts.push([a + r, bY(a + r)]);
+      pts = pts.concat(quad([a + r, bY(a + r)], [a, bY(a + r)], [a, bY(a + r) - r], 5));
+      pts.push([a, tY(a + r) + r]);
+      pts = pts.concat(quad([a, tY(a + r) + r], [a, tY(a + r)], [a + r, tY(a + r)], 5));
+      var vy0 = 1e9, vy1 = -1e9;
+      pts.forEach(function(p){ if (p[1] < vy0) vy0 = p[1]; if (p[1] > vy1) vy1 = p[1]; });
+      var cell = document.createElement('div');
+      cell.className = 'cell';
+      cell.style.left = (a / g.w * 100).toFixed(3) + '%';
+      cell.style.top = (vy0 / g.h * 100).toFixed(3) + '%';
+      cell.style.width = ((b - a) / g.w * 100).toFixed(3) + '%';
+      cell.style.height = ((vy1 - vy0) / g.h * 100).toFixed(3) + '%';
+      var pp = pts.map(function(p){
+        return (((p[0] - a) / (b - a)) * 100).toFixed(2) + '% ' + (((p[1] - vy0) / (vy1 - vy0)) * 100).toFixed(2) + '%';
+      });
+      var clip = 'polygon(' + pp.join(',') + ')';
+      cell.style.clipPath = clip;
+      cell.style.webkitClipPath = clip;
+      var strip = document.createElement('div');
+      strip.className = 'strip';
+      strip.dataset.dir = String(g.dir);
+      strip.dataset.seq = String(seq);
+      for (var c = 0; c < 3; c++)
+        for (var i = 0; i < seq; i++){
+          var im = document.createElement('img');
+          /* 每块错位一块：同屏各块显示不同作品 */
+          im.src = 'assets/catalog/' + names[(i + s) % seq] + '.jpg';
+          im.alt = ''; im.draggable = false;
+          strip.appendChild(im);
+        }
+      cell.appendChild(strip);
+      /* 互动：点击蒙版块 → 画面走一格 */
+      cell.addEventListener('click', function(){ stepAll(1); });
+      host.appendChild(cell);
+      strips.push(strip);
+    }
+  });
+
+  /* 滚轮 / 中键滑动：累计 delta，每约一格滚动走一格 */
+  var idx = 0, acc = 0;
+  function stepAll(d){
+    idx += d;
+    strips.forEach(function(s){
+      var seq = +s.dataset.seq;
+      var fd = s.dataset.dir === '1' ? 1 : -1;
+      var tRaw = fd === 1 ? -idx : idx;
+      var p = ((tRaw % seq) + seq) % seq;
+      var pPrev = (((tRaw - d) % seq) + seq) % seq;
+      var tN = seq + p, snap = false;
+      if (d > 0 && pPrev === seq - 1 && p === 0){ tN = 2 * seq; snap = true; }
+      if (d < 0 && pPrev === 0 && p === seq - 1){ tN = seq - 1; snap = true; }
+      s.style.transform = 'translateX(' + (-tN * 100) + '%)';
+      if (snap) setTimeout(function(){
+        s.style.transition = 'none';
+        s.style.transform = 'translateX(' + (-(seq + p) * 100) + '%)';
+        void s.offsetWidth;
+        s.style.transition = '';
+      }, 400);
+    });
+  }
+  window.addEventListener('wheel', function(e){
+    acc += e.deltaY;
+    while (Math.abs(acc) >= 500){   /* 灵敏度：滚约 5 格走 1 格 */
+      var d = acc > 0 ? 1 : -1;
+      acc -= d * 90;
+      stepAll(d);
+    }
+  }, {passive:true});
+
+  function setStrips(noAnim){
+    strips.forEach(function(s){
+      var seq = +s.dataset.seq;
+      var fd = s.dataset.dir === '1' ? 1 : -1;
+      var tRaw = fd === 1 ? -idx : idx;
+      var p = ((tRaw % seq) + seq) % seq;
+      if (noAnim) s.style.transition = 'none';
+      s.style.transform = 'translateX(' + (-(seq + p) * 100) + '%)';
+      if (noAnim){ void s.offsetWidth; s.style.transition = ''; }
+    });
+  }
+  setStrips(true);
+  /* 调试：?step=N 打开即处于第 N 格 */
+  var sm = location.search.match(/step=(-?\d+)/);
+  if (sm){ idx = parseInt(sm[1], 10); setStrips(true); }
+})();
+</script>
+
+<script>
+/* 接首页硬币动画：硬币从相同 X 位置掉落，落到（垫在筹码后面的）胶卷上并停住 */
+(function(){
+  if (location.search.indexOf('drop=1') < 0) return;
+  var m = location.search.match(/[?&]x=([\d.]+)/);
+  var xFrac = m ? Math.min(.98, Math.max(.02, parseFloat(m[1]))) : .52;
+  var filmA = document.querySelector('.film-a .film-base');
+  var filmB = document.querySelector('.film-b .film-base');
+
+  function yOn(arr, ix){                             /* 波形线性插值 */
+    if (ix <= arr[0][0]) return arr[0][1];
+    for (var i = 0; i < arr.length - 1; i++)
+      if (ix <= arr[i + 1][0]){
+        var t = (ix - arr[i][0]) / (arr[i + 1][0] - arr[i][0]);
+        return arr[i][1] + (arr[i + 1][1] - arr[i][1]) * t;
+      }
+    return arr[arr.length - 1][1];
+  }
+
+  function drop(){
+    if (!filmA || !filmB) return;
+    var rA = filmA.getBoundingClientRect();
+    var rB = filmB.getBoundingClientRect();
+    var W = 80;                                     /* 硬币尺寸 */
+    var x = xFrac * window.innerWidth - W / 2;
+    /* 落点：后面那条胶卷（A）的上缘描边在该 X 处的 Y（随波浪起伏） */
+    var geoA = window.__FILM_GEO && window.__FILM_GEO.A;
+    var geoB = window.__FILM_GEO && window.__FILM_GEO.B;
+    var imgX0 = 596;
+    var yLand = rA.top + rA.height * .32 - W;
+    if (geoA){
+      var arr = geoA.top;
+      imgX0 = Math.max(arr[0][0], Math.min(arr[arr.length - 1][0],
+        (xFrac * window.innerWidth - rA.left) / rA.width * 1108));
+      yLand = rA.top + yOn(arr, imgX0) / 383 * rA.height - W;
+    }
+    var img = document.createElement('img');
+    img.src = 'assets/pieces/coin-front.png';
+    img.alt = ''; img.draggable = false;
+    img.style.cssText = 'position:fixed;left:0;top:0;width:' + W + 'px;height:' + W +
+      'px;z-index:40;pointer-events:none;will-change:transform;' +
+      /* 硬币描边：四周白色贴纸描边 + 淡淡投影 */
+      'filter:drop-shadow(2.5px 0 0 #fff) drop-shadow(-2.5px 0 0 #fff) drop-shadow(0 2.5px 0 #fff) drop-shadow(0 -2.5px 0 #fff) drop-shadow(0 6px 10px rgba(72,30,22,.35));';
+    document.body.appendChild(img);
+    /* 动态注入 CSS keyframes（比 WAAPI 兼容性更稳） */
+    var spin = 720;
+    var st = document.createElement('style');
+    st.textContent = '@keyframes coinDropK{' +
+      '0%{transform:translate(' + x + 'px,' + (-W * 2.5) + 'px) rotate(0deg);animation-timing-function:cubic-bezier(.45,0,.85,.35)}' +
+      '52%{transform:translate(' + x + 'px,' + yLand + 'px) rotate(' + Math.round(spin * .8) + 'deg);animation-timing-function:cubic-bezier(.2,.55,.45,1)}' +
+      '68%{transform:translate(' + x + 'px,' + (yLand - W * .9) + 'px) rotate(' + Math.round(spin * .9) + 'deg)}' +
+      '100%{transform:translate(' + x + 'px,' + yLand + 'px) rotate(' + spin + 'deg)}' +
+      '}';
+    document.head.appendChild(st);
+    if (location.search.indexOf('still=1') > -1 || !(geoA && geoB)){
+      /* 调试定格 / 无几何数据：只做掉落停住 */
+      img.style.transform = 'translate(' + x + 'px,' + yLand + 'px) rotate(' + spin + 'deg)';
+      if (location.search.indexOf('still=1') < 0)
+        img.style.animation = 'coinDropK 1.7s cubic-bezier(.45,0,.85,.35) forwards';
+      return;
+    }
+
+    /* ---------- 落地后沿描边滚动 ----------
+       P1：沿 A 卷上缘描边向右滚到 A 卷最右
+       P2：从 B 卷右边淡入，沿 B 卷上缘描边向左滚到最左
+       P3：淡出，从所有物体前面的左下角出现，沿底部滚回落点 X
+       胶卷上硬币底边始终切在描边线上；滚动角速度按真实滚动换算 */
+    var K = [], tR = 0, rot = spin, prevX = x;
+    var SPEED = 380, DF = 114.59 / W;                /* px/s；deg/px（360/πD） */
+    function ptA(ix){ return [rA.left + ix / 1108 * rA.width - W / 2,
+                              rA.top + yOn(geoA.top, ix) / 383 * rA.height - W]; }
+    function ptB(ix){ return [rB.left + ix / 1108 * rB.width - W / 2,
+                              rB.top + yOn(geoB.top, ix) / 383 * rB.height - W]; }
+    function addPhase(pt, x0, x1, dir, zFn){
+      var dur = Math.max(.45, Math.abs(pt(x1)[0] - pt(x0)[0]) / SPEED);
+      var n = Math.max(8, Math.round(dur * 16));
+      for (var i = 0; i <= n; i++){
+        var ix = x0 + (x1 - x0) * i / n;
+        var p = pt(ix);
+        rot += dir * Math.abs(p[0] - prevX) * DF;
+        prevX = p[0];
+        K.push({t: tR + dur * i / n, x: p[0], y: p[1], rot: rot, op: 1,
+                z: typeof zFn === 'function' ? zFn(ix) : zFn});
+      }
+      tR += dur;
+    }
+    function addHold(px, py, op, z, dt){
+      tR += dt;
+      K.push({t: tR, x: px, y: py, rot: rot, op: op, z: z});
+    }
+    /* A 卷上缘描边某点是否被 B 卷（前层）盖住：按两卷实际渲染位置换算 */
+    var coveredByB = function(ix){
+      var bt = yOn(geoB.top, ix) / 383 * rB.height + rB.top;   /* B 带上缘视口 Y */
+      var bb = yOn(geoB.bot, ix) / 383 * rB.height + rB.top;   /* B 带下缘视口 Y */
+      var at = yOn(geoA.top, ix) / 383 * rA.height + rA.top;   /* A 上缘描边视口 Y */
+      return bt < at && at < bb;
+    };
+    /* P1：A 卷描边向右滚到最右；被 B 卷盖住的区段硬币钻到 B 卷后面（z 低于胶卷） */
+    addPhase(ptA, imgX0, 1086, 1, function(ix){ return coveredByB(ix) ? 1 : 40; });
+    /* 淡出 → B 卷右端淡入（回到最前层） */
+    var pe = K[K.length - 1];
+    addHold(pe.x, pe.y, 0, 40, .22);
+    var pb = ptB(1086);
+    prevX = pb[0];
+    addHold(pb[0], pb[1], 0, 40, .22);
+    /* P2：B 卷描边向左滚到最左 */
+    addPhase(ptB, 1086, 14, -1, 40);
+    /* 淡出 → 左下角（所有物体前面）淡入 */
+    pe = K[K.length - 1];
+    addHold(pe.x, pe.y, 0, 80, .22);
+    var yBot = window.innerHeight - W - 50;          /* 底部滚回线向上提高 50px */
+    prevX = -W * .3;
+    addHold(prevX, yBot, 0, 80, .22);
+    /* P3：最前层沿底部滚回落点 X，并补滚到整数圈（停下时硬币正着） */
+    var p3i = K.length;
+    addPhase(function(ix){ return [ix, yBot]; }, -W * .3, x, 1, 80);
+    var need = (360 - (rot % 360)) % 360;
+    if (need > 1){
+      var cnt = K.length - p3i;
+      for (var qi = p3i; qi < K.length; qi++)
+        K[qi].rot += need * (qi - p3i + 1) / cnt;
+    }
+
+    var total = tR;
+    var kf = K.map(function(k){
+      return (k.t / total * 100).toFixed(2) + '%{transform:translate(' + k.x.toFixed(1) + 'px,' + k.y.toFixed(1) + 'px) rotate(' + Math.round(k.rot) + 'deg);opacity:' + k.op + ';z-index:' + k.z + '}';
+    }).join('');
+    var st2 = document.createElement('style');
+    st2.textContent = '@keyframes coinRollK{' + kf + '}';
+    document.head.appendChild(st2);
+    /* 行内兜底：动画异常时硬币停在最终位置（落点 X、屏幕底部前层） */
+    var ke = K[K.length - 1];
+    img.style.transform = 'translate(' + ke.x.toFixed(1) + 'px,' + ke.y.toFixed(1) + 'px) rotate(' + Math.round(ke.rot) + 'deg)';
+    /* 调试：?at=N 直接跳到全程第 N 秒的状态（负延迟） */
+    var am = location.search.match(/[?&]at=([\d.]+)/);
+    if (am){
+      var at = parseFloat(am[1]);
+      img.style.animation = 'coinDropK 1.7s cubic-bezier(.45,0,.85,.35) ' + Math.min(0, 0.35 + 0 - at) + 's forwards, coinRollK ' + total.toFixed(2) + 's linear ' + (1.7 - at).toFixed(2) + 's forwards';
+    } else {
+      img.style.animation = 'coinDropK 1.7s cubic-bezier(.45,0,.85,.35) forwards, coinRollK ' + total.toFixed(2) + 's linear 1.7s forwards';
+    }
+    if (location.search.indexOf('dbg=1') > -1)
+      document.title = 'DBG ke=' + ke.x.toFixed(1) + ',' + ke.y.toFixed(1) + ' rot=' + Math.round(ke.rot) + ' ih=' + window.innerHeight + ' total=' + total.toFixed(2);
+
+    /* ---------- 硬币运动配音（WebAudio 合成，无外部音频文件；浏览器拦截自动播放时静默跳过） ---------- */
+    if (location.search.indexOf('at=') < 0){
+      var AC = window.AudioContext || window.webkitAudioContext;
+      var actx = null;
+      var au = function(){
+        if (!AC) return null;
+        try{
+          if (!actx) actx = new AC();
+          if (actx.state === 'suspended' && actx.resume) actx.resume();
+          return actx.state === 'running' ? actx : null;
+        }catch(e){ return null; }
+      };
+      var tone = function(c, t, f0, f1, vol, dur, type){
+        var o = c.createOscillator(), g = c.createGain();
+        o.type = type || 'sine';
+        o.frequency.setValueAtTime(f0, t);
+        if (f1) o.frequency.exponentialRampToValueAtTime(f1, t + dur);
+        g.gain.setValueAtTime(vol, t);
+        g.gain.exponentialRampToValueAtTime(.001, t + dur);
+        o.connect(g); g.connect(c.destination);
+        o.start(t); o.stop(t + dur + .02);
+      };
+      var thud = function(c, t, vol){                /* 落地 / 停稳闷响 */
+        tone(c, t, 130, 55, vol, .16, 'sine');
+        tone(c, t, 420, 90, vol * .4, .07, 'triangle');
+      };
+      var chime = function(c, t){                   /* 问候卡弹出叮咚 */
+        tone(c, t, 660, 0, .18, .3, 'sine');
+        tone(c, t + .12, 990, 0, .14, .35, 'sine');
+      };
+      var sc = au();
+      if (sc){
+        var t0 = sc.currentTime + 1.7;              /* 掉落动画结束 = 落地时刻 */
+        thud(sc, t0, .5);                           /* 落地 */
+        thud(sc, t0 + total, .4);                   /* 停稳 */
+        chime(sc, t0 + total + .35);                /* 问候卡弹出 */
+      }
+    }
+
+    /* 硬币停稳后：在硬币右侧弹出小问候卡（不占全屏） */
+    var shown = false;
+    var greet = function(){
+      if (shown) return;
+      shown = true;
+      var card = document.createElement('div');
+      card.style.cssText = 'position:fixed;z-index:95;background:rgba(250,243,234,.97);border:1px solid #e8d9c3;' +
+        'border-radius:16px;box-shadow:0 18px 40px -20px rgba(74,32,22,.6);padding:16px 22px;text-align:center;' +
+        'animation:greetPop .45s cubic-bezier(.34,1.56,.64,1) both;';
+      var msg = document.createElement('div');
+      msg.textContent = '欢迎观看我的作品 0v0';
+      msg.style.cssText = 'color:#5a2a20;font-size:.95rem;letter-spacing:.14em;font-weight:500;white-space:nowrap;';
+      card.appendChild(msg);
+      document.body.appendChild(card);
+      /* 定位：硬币右侧竖直居中；靠右放不下时改到硬币左侧 */
+      var bw = card.offsetWidth, bh = card.offsetHeight;
+      var cx = ke.x + W + 14, cy = ke.y + W / 2;
+      if (cx + bw > window.innerWidth - 10) cx = ke.x - bw - 14;
+      card.style.left = Math.max(10, cx) + 'px';
+      card.style.top = Math.max(10, Math.min(window.innerHeight - bh - 10, cy - bh / 2)) + 'px';
+      setTimeout(function(){
+        document.addEventListener('click', function h(e){
+          if (!card.contains(e.target)){ card.remove(); document.removeEventListener('click', h); }
+        });
+      }, 300);
+    };
+    var gst = document.createElement('style');
+    gst.textContent = '@keyframes greetPop{from{opacity:0;transform:scale(.72)}to{opacity:1;transform:scale(1)}}';
+    document.head.appendChild(gst);
+    img.addEventListener('animationend', function(e){
+      if (e.animationName === 'coinRollK') greet();
+    });
+    setTimeout(greet, (1.7 + total) * 1000 + 200);   /* 兜底：动画事件没触发也能弹出 */
+  }
+
+  if (document.readyState === 'complete') setTimeout(drop, 350);
+  else window.addEventListener('load', function(){ setTimeout(drop, 350); });
+})();
+</script>
+
+</body>
+</html>
