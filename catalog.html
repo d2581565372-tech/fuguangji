@@ -186,7 +186,6 @@ img{display:block}
   <a href="index.html#projects">项目</a>
   <a href="index.html#about">关于</a>
   <a href="index.html#contact">联系</a>
-  <a href="gallery.html">筹码画廊</a>
 </header>
 <header class="nav nav-back">
   <a href="index.html">返回首页</a>
@@ -302,8 +301,20 @@ img{display:block}
           strip.appendChild(im);
         }
       cell.appendChild(strip);
-      /* 互动：点击蒙版块 → 画面走一格 */
-      cell.addEventListener('click', function(){ stepAll(1); });
+      /* 互动：点击蒙版块 → 打开该格当前显示的作品组页面（直接读格内实际显示的图，不会错位） */
+      cell.addEventListener('click', function(){
+        var strip2 = cell.querySelector('.strip');
+        var mt = /translateX\((-?[\d.]+)%\)/.exec(strip2.style.transform || '');
+        if (!mt) return;
+        var slide = Math.round(parseFloat(mt[1]) / 100);
+        var kids = strip2.children.length;
+        var child = strip2.children[((slide % kids) + kids) % kids];
+        if (!child) return;
+        var wm = /w(\d+)a/.exec(child.getAttribute('src') || '');
+        if (!wm) return;
+        if (location.search.indexOf('nonav') > -1){ stepAll(1); return; }   /* 调试模式保持走格 */
+        window.location.href = 'work.html?g=' + parseInt(wm[1], 10);
+      });
       host.appendChild(cell);
       strips.push(strip);
     }
@@ -355,6 +366,12 @@ img{display:block}
   /* 调试：?step=N 打开即处于第 N 格 */
   var sm = location.search.match(/step=(-?\d+)/);
   if (sm){ idx = parseInt(sm[1], 10); setStrips(true); }
+  /* 调试：?autoclick 自动点击第一个格子（验证跳转落点） */
+  if (location.search.indexOf('autoclick') > -1)
+    setTimeout(function(){
+      var c = document.querySelector('.film-b .cell') || document.querySelector('.cell');
+      if (c) c.click();
+    }, 600);
 })();
 </script>
 
